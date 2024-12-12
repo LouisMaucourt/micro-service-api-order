@@ -1,10 +1,9 @@
-const axios = require('axios');
+// api/order.js
 const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 
-class OrderController {
-    async createOrder(req, res) {
-        console.log("createOrder appelée");
-        console.log("Corps:", req.body);
+module.exports = async (req, res) => {
+    if (req.method === 'POST') {
         try {
             const { products } = req.body;
             console.log("Requête:", products);
@@ -15,38 +14,23 @@ class OrderController {
                 });
             }
 
+            // Perform your stock checking logic here (use your actual stockApi)
             for (const product of products) {
                 try {
-                    const stockResponse = await stockApi.get(`/api/stock/${product.productId}`);
+                    const stockResponse = await axios.get(`/api/stock/${product.productId}`);
                     const availableQuantity = stockResponse.data.quantity;
                     if (availableQuantity < product.quantity) {
                         return res.status(400).json({
                             message: `Produit ${product.productId}: pas de quantité suffisante (stock: ${availableQuantity}, demandé: ${product.quantity})`
                         });
                     }
-                    return res.status(200).json({ id: uuidv4() });
                 } catch (error) {
                     console.error('Erreur:', error);
                     return res.status(500).json({ message: 'Erreur serveur' });
                 }
             }
 
-            const stockMovements = products.map(product => ({
-                productId: product.productId,
-                quantity: product.quantity,
-                status: 'Reserve'
-            }));
-
-            for (const movement of stockMovements) {
-                try {
-                    await stockApi.post(`/stock/${movement.productId}/movement`, movement);
-                } catch (error) {
-                    console.error('Erreur de mouvement de stock:', error.message);
-                    return res.status(400).json({
-                        message: `Impossible de réserver le stock pour ${movement.productId}`
-                    });
-                }
-            }
+            // If all products are valid, create order
             const orderId = uuidv4();
             const order = {
                 id: orderId,
@@ -63,7 +47,7 @@ class OrderController {
                 details: error.message
             });
         }
+    } else {
+        return res.status(405).json({ message: "Method Not Allowed" });
     }
-}
-
-module.exports = new OrderController();
+};

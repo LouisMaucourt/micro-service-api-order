@@ -1,15 +1,19 @@
-// Add Express
 const express = require("express");
+const orderController = require("./orderController");
 
-// Initialize Express
 const app = express();
 
-// Create GET request
+app.use(express.json());
+
 app.get("/api/ping", (req, res) => {
   res.send("PONG");
 });
 
-// Initialize server
+app.post("/api/order", (req, res) => {
+  console.log("Route /api/order atteinte");
+  orderController.createOrder(req, res);
+});
+
 app.listen(3000, () => {
   console.log("Running on port 3000.");
 });

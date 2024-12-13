@@ -5,6 +5,10 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
+app.get('/api/pin', async (req, res) => {
+  res.send('pong')
+});
+
 const stockApiUrl = process.env.STOCK_API_URL || "http://localhost:3000";
 
 app.post("/api/order", async (req, res) => {

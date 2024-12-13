@@ -5,7 +5,7 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
-app.get('/api/pin', async (req, res) => {
+app.get('/api/ping', async (req, res) => {
   res.send('pong')
 });
 
@@ -89,8 +89,8 @@ app.post("/api/order", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
 
 module.exports = app;

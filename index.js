@@ -30,6 +30,7 @@ app.post("/api/order", async (req, res) => {
 
       try {
         console.log(`Stock produit : ${product.productId}`);
+        console.log('product quantité', product.quantity)
         const stockResponse = await axios.post(
           `${stockApiUrl}/api/stock/${product.productId}/movement`,
           {
@@ -44,7 +45,7 @@ app.post("/api/order", async (req, res) => {
           await Promise.all(
             stockReservations.map(reservation =>
               axios.post(`${stockApiUrl}/api/stock/${reservation.productId}/movement`, {
-                quantity: -reservation.quantity,
+                quantity: reservation.quantity,
                 type: 'Removal'
               })
             )
@@ -66,7 +67,8 @@ app.post("/api/order", async (req, res) => {
 
         stockReservations.push({
           productId: product.productId,
-          quantity: product.quantity
+          quantity: product.quantity,
+          status: product.status
         });
 
       } catch (error) {
@@ -74,6 +76,7 @@ app.post("/api/order", async (req, res) => {
         return res.status(500).json({
           message: `Erreur lors de la vérification du produit ${product.productId}`,
           details: error.message,
+
         });
       }
     }
@@ -88,6 +91,7 @@ app.post("/api/order", async (req, res) => {
     return res.status(200).json({
       id: orderId,
       message: "Commande créée avec succès",
+      status: order.status
     });
   } catch (error) {
     console.error("Erreur interne lors de la création de la commande", error);

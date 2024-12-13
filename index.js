@@ -16,18 +16,9 @@ app.post("/api/order", async (req, res) => {
     const products = req.body;
     console.log('Produits reçus :', products);
 
-    // if (!Array.isArray(products) || products.length === 0) {
-    //   return res.status(400).json({ message: "Liste de produits invalide" });
-    // }
     const stockReservations = [];
 
     for (const product of products) {
-      // if (!product.productId || !product.quantity) {
-      //   return res.status(400).json({
-      //     message: `Produit invalide : ${JSON.stringify(product)}`,
-      //   });
-      // }
-
       try {
         console.log(`Stock produit : ${product.productId}`);
         console.log('product quantité', product.quantity)
@@ -41,38 +32,6 @@ app.post("/api/order", async (req, res) => {
           }
         );
 
-
-        // if (availableQuantity < product.quantity) {
-        //   await Promise.all(
-        //     stockReservations.map(reservation =>
-        //       axios.post(`${stockApiUrl}/api/stock/${reservation.productId}/movement`, {
-        //         quantity: reservation.quantity,
-        //         status: 'Removal',
-        //         productId: reservation.productId
-        //       })
-        //     )
-        //   );
-        //   return res.status(400).json({
-        //     message: `Stock insuffisant pour le produit ${product.productId} (stock: ${availableQuantity}, demandé: ${product.quantity})`,
-        //   });
-        // }
-        // console.log(`Vérification stock - URL complète : ${stockApiUrl}`);
-        // const reservationResponse = await axios.post(
-
-        //   `${stockApiUrl}/api/stock/${product.productId}/movement`,
-
-        //   {
-        //     quantity: -product.quantity,
-        //     status: 'Reserve',
-        //     productId: reservation.productId
-        //   }
-        // );
-
-        // stockReservations.push({
-        //   productId: product.productId,
-        //   quantity: product.quantity,
-        //   status: product.status
-        // });
 
       } catch (error) {
         console.error(`Erreur de gestion du stock : ${error.message}`);
@@ -89,6 +48,8 @@ app.post("/api/order", async (req, res) => {
       status: "PENDING",
       products: products,
     };
+    orders[orderId] = order;
+
 
     console.log(`Commande créée avec succès : ${orderId}`);
     return res.status(200).json({
@@ -133,6 +94,45 @@ app.post("/api/shipping", async (req, res) => {
     });
   }
 });
+
+const orders = {};
+
+app.get("/api/order/:orderId", async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = orders[orderId];
+
+    if (!order) {
+      return res.status(404).json({
+        message: "La commande n'existe pas",
+        orderId: orderId,
+      });
+    }
+
+    const orderDetails = {
+      id: order.id,
+      status: order.status,
+      products: order.products.map(product => ({
+        productId: product.productId,
+        quantity: product.quantity,
+      })),
+    };
+
+    return res.status(200).json(orderDetails);
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la commande", error);
+    return res.status(500).json({
+      message: "Erreur interne du serveur",
+      details: error.message,
+    });
+  }
+});
+
+
+
+
+
 
 
 const PORT = process.env.PORT || 3000;

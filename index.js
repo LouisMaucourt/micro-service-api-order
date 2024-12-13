@@ -16,63 +16,63 @@ app.post("/api/order", async (req, res) => {
     const products = req.body;
     console.log('Produits reçus :', products);
 
-    if (!Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({ message: "Liste de produits invalide" });
-    }
+    // if (!Array.isArray(products) || products.length === 0) {
+    //   return res.status(400).json({ message: "Liste de produits invalide" });
+    // }
     const stockReservations = [];
 
     for (const product of products) {
-      if (!product.productId || !product.quantity) {
-        return res.status(400).json({
-          message: `Produit invalide : ${JSON.stringify(product)}`,
-        });
-      }
+      // if (!product.productId || !product.quantity) {
+      //   return res.status(400).json({
+      //     message: `Produit invalide : ${JSON.stringify(product)}`,
+      //   });
+      // }
 
       try {
         console.log(`Stock produit : ${product.productId}`);
+        console.log('product quantité', product.quantity)
         console.log('product quantité', product.quantity)
         const stockResponse = await axios.post(
           `${stockApiUrl}/api/stock/${product.productId}/movement`,
           {
             quantity: product.quantity,
             status: 'Reserve',
-            productId: reservation.productId,
-          }
-        );
-        console.log('Réponse stock:', stockResponse.data);
-        const availableQuantity = stockResponse.data.quantity;
-
-        if (availableQuantity < product.quantity) {
-          await Promise.all(
-            stockReservations.map(reservation =>
-              axios.post(`${stockApiUrl}/api/stock/${reservation.productId}/movement`, {
-                quantity: reservation.quantity,
-                status: 'Removal',
-                productId: reservation.productId
-              })
-            )
-          );
-          return res.status(400).json({
-            message: `Stock insuffisant pour le produit ${product.productId} (stock: ${availableQuantity}, demandé: ${product.quantity})`,
-          });
-        }
-        console.log(`Vérification stock - URL complète : ${stockApiUrl}`);
-        const reservationResponse = await axios.post(
-
-          `${stockApiUrl}/api/stock/${product.productId}/movement`,
-
-          {
-            quantity: -product.quantity,
-            status: 'Reserve',
-            productId: reservation.productId
+            productId: product.productId,
           }
         );
 
-        stockReservations.push({
-          productId: product.productId,
-          quantity: product.quantity,
-          status: product.status
-        });
+
+        // if (availableQuantity < product.quantity) {
+        //   await Promise.all(
+        //     stockReservations.map(reservation =>
+        //       axios.post(`${stockApiUrl}/api/stock/${reservation.productId}/movement`, {
+        //         quantity: reservation.quantity,
+        //         status: 'Removal',
+        //         productId: reservation.productId
+        //       })
+        //     )
+        //   );
+        //   return res.status(400).json({
+        //     message: `Stock insuffisant pour le produit ${product.productId} (stock: ${availableQuantity}, demandé: ${product.quantity})`,
+        //   });
+        // }
+        // console.log(`Vérification stock - URL complète : ${stockApiUrl}`);
+        // const reservationResponse = await axios.post(
+
+        //   `${stockApiUrl}/api/stock/${product.productId}/movement`,
+
+        //   {
+        //     quantity: -product.quantity,
+        //     status: 'Reserve',
+        //     productId: reservation.productId
+        //   }
+        // );
+
+        // stockReservations.push({
+        //   productId: product.productId,
+        //   quantity: product.quantity,
+        //   status: product.status
+        // });
 
       } catch (error) {
         console.error(`Erreur de gestion du stock : ${error.message}`);
@@ -104,6 +104,8 @@ app.post("/api/order", async (req, res) => {
     });
   }
 });
+
+
 app.post("/api/shipping", async (req, res) => {
   try {
     const { orderId, nbProducts } = req.body;

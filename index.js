@@ -9,27 +9,36 @@ app.get('/api/ping', async (req, res) => {
   res.send('pong')
 });
 
-const stockApiUrl = process.env.STOCK_API_URL || "http://localhost:3000";
+const stockApiUrl = "https://microservice-stock-nine.vercel.app"
 
 app.post("/api/order", async (req, res) => {
   try {
+    console.log('URL API Stock :', stockApiUrl);
     const products = req.body;
+    console.log('Produits reçus :', products);
 
     if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ message: "Liste de produits invalide" });
     }
     const stockReservations = [];
+
     for (const product of products) {
       if (!product.productId || !product.quantity) {
         return res.status(400).json({
           message: `Produit invalide : ${JSON.stringify(product)}`,
         });
       }
-      try {
-        const stockResponse = await axios.get(
-          `${stockApiUrl}/api/stock/${product.productId}`
-        );
 
+      try {
+        console.log(`Stock produit : ${product.productId}`);
+        const stockResponse = await axios.post(
+          `${stockApiUrl}/api/stock/${product.productId}/movement`,
+          {
+            quantity: -product.quantity,
+            type: 'Reserve',
+          }
+        );
+        console.log('Réponse stock:', stockResponse.data);
         const availableQuantity = stockResponse.data.quantity;
 
         if (availableQuantity < product.quantity) {
@@ -37,7 +46,7 @@ app.post("/api/order", async (req, res) => {
             stockReservations.map(reservation =>
               axios.post(`${stockApiUrl}/api/stock/${reservation.productId}/movement`, {
                 quantity: -reservation.quantity,
-                type: 'CANCEL_RESERVATION'
+                type: 'Removal'
               })
             )
           );
@@ -46,8 +55,11 @@ app.post("/api/order", async (req, res) => {
             message: `Stock insuffisant pour le produit ${product.productId} (stock: ${availableQuantity}, demandé: ${product.quantity})`,
           });
         }
+        console.log(`Vérification stock - URL complète : ${stockApiUrl}`);
         const reservationResponse = await axios.post(
+
           `${stockApiUrl}/api/stock/${product.productId}/movement`,
+
           {
             quantity: -product.quantity,
             type: 'Reserve'

@@ -13,7 +13,6 @@ const stockApiUrl = "https://microservice-stock-nine.vercel.app"
 
 app.post("/api/order", async (req, res) => {
   try {
-    console.log('URL API Stock :', stockApiUrl);
     const products = req.body;
     console.log('Produits reçus :', products);
 
@@ -34,7 +33,7 @@ app.post("/api/order", async (req, res) => {
         const stockResponse = await axios.post(
           `${stockApiUrl}/api/stock/${product.productId}/movement`,
           {
-            quantity: -product.quantity,
+            quantity: product.quantity,
             type: 'Reserve',
           }
         );
@@ -50,7 +49,6 @@ app.post("/api/order", async (req, res) => {
               })
             )
           );
-
           return res.status(400).json({
             message: `Stock insuffisant pour le produit ${product.productId} (stock: ${availableQuantity}, demandé: ${product.quantity})`,
           });
@@ -99,6 +97,34 @@ app.post("/api/order", async (req, res) => {
     });
   }
 });
+app.post("/api/shipping", async (req, res) => {
+  try {
+    const { orderId, nbProducts } = req.body;
+    if (!orderId || nbProducts === undefined) {
+      return res.status(400).json({
+        message: "Livraison invalides",
+        details: "L'orderId et le productCount sont requis"
+      });
+    }
+
+    console.log(`Notification commande ${orderId}`);
+    console.log(`Nombre total de produits : ${nbProducts}`);
+
+    return res.status(200).json({
+      message: "Notification de livraison succes",
+      orderId: orderId,
+      nbProducts: nbProducts
+    });
+
+  } catch (error) {
+    console.error("Erreur lors de la notification de livraison", error);
+    return res.status(500).json({
+      message: "Erreur interne lors de la notification de livraison",
+      details: error.message
+    });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(3000, () => {

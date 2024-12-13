@@ -35,7 +35,8 @@ app.post("/api/order", async (req, res) => {
           `${stockApiUrl}/api/stock/${product.productId}/movement`,
           {
             quantity: product.quantity,
-            type: 'Reserve',
+            status: 'Reserve',
+            productId: reservation.productId,
           }
         );
         console.log('Réponse stock:', stockResponse.data);
@@ -46,7 +47,8 @@ app.post("/api/order", async (req, res) => {
             stockReservations.map(reservation =>
               axios.post(`${stockApiUrl}/api/stock/${reservation.productId}/movement`, {
                 quantity: reservation.quantity,
-                type: 'Removal'
+                status: 'Removal',
+                productId: reservation.productId
               })
             )
           );
@@ -61,7 +63,8 @@ app.post("/api/order", async (req, res) => {
 
           {
             quantity: -product.quantity,
-            type: 'Reserve'
+            status: 'Reserve',
+            productId: reservation.productId
           }
         );
 
